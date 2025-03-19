@@ -4,13 +4,22 @@
 
 ```bash
 composer require wyattcast44/hub-for-laravel
+// or 
+composer global require wyattcast44/hub-for-laravel
 ```
 
 # Updating
 
 ```bash
-composer global update laravel-hub-cli/laravel-hub
+composer global update wyattcast44/hub-for-laravel
 ```
+
+# Inspiration
+
+- Matt Stauffer / Tighten [Lambo](https://github.com/tighten/lambo)
+- Docker Compose
+- Docker Hub
+- [Laravel Blueprint](https://blueprint.laravelshift.com/)
 
 # Usage
 
