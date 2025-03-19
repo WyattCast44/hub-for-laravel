@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Str;
+
 class Project
 {
     /**
@@ -30,5 +32,10 @@ class Project
     public static function make()
     {
         return new self;
+    }
+
+    public function getSluggifiedName(): string
+    {
+        return Str::slug($this->name);
     }
 }

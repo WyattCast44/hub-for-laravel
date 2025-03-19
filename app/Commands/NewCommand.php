@@ -13,7 +13,7 @@ class NewCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'new {name?} {--installer}';
+    protected $signature = 'new {name?} {--installer=}';
 
     /**
      * The description of the command.
@@ -23,7 +23,7 @@ class NewCommand extends Command
     protected $description = 'Create a new Laravel application using composer or the laravel installer';
 
     protected $installCommand =
-        'composer create-project laravel/laravel {NAME} --remove-vcs --prefer-dist --no-progress --quiet';
+        'composer create-project laravel/laravel {NAME} --remove-vcs --prefer-dist';
 
     /**
      * Execute the console command.
@@ -43,6 +43,7 @@ class NewCommand extends Command
         } catch (Exception $e) {
             $this->error('Failed to create Laravel application.');
         }
+
     }
 
     protected function determineIfUserHasLaravelInstallerInstalled(): bool
@@ -73,7 +74,9 @@ class NewCommand extends Command
 
         $command = str_replace('{NAME}', $name, $this->installCommand);
 
-        $process = Process::run($command);
+        $process = Process::run($command, function ($type, $buffer) {
+            $this->info($buffer);
+        });
 
         if (! $process->successful()) {
             $this->error('Failed to create Laravel application.');

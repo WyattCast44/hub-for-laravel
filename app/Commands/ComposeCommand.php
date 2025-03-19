@@ -3,6 +3,7 @@
 namespace App\Commands;
 
 use App\Models\Project;
+use App\Pipes\UpsertEnvFilePipe;
 use Exception;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
@@ -46,6 +47,10 @@ class ComposeCommand extends Command
      */
     protected Project $project;
 
+    protected array $pipes = [
+        'env' => UpsertEnvFilePipe::class,
+    ];
+
     /**
      * Execute the console command.
      */
@@ -53,7 +58,7 @@ class ComposeCommand extends Command
     {
         $this->project = Project::make();
 
-        $this->printBanner()
+        $this
             ->determineRecipeToCompose()
             ->ensureScriptFileExists()
             ->loadRecipeFile()
@@ -63,20 +68,6 @@ class ComposeCommand extends Command
             ->ensureDirectoryDNE()
             ->determineInstallerToUse()
             ->installApplication();
-    }
-
-    protected function printBanner()
-    {
-        $this->info("
-  _                               _ _    _       _     
- | |                             | | |  | |     | |    
- | |     __ _ _ __ __ ___   _____| | |__| |_   _| |__  
- | |    / _` | '__/ _` \ \ / / _ \ |  __  | | | | '_ \ 
- | |___| (_| | | | (_| |\ V /  __/ | |  | | |_| | |_) |
- |______\__,_|_|  \__,_| \_/ \___|_|_|  |_|\__,_|_.__/ 
-");
-
-        return $this;
     }
 
     protected function determineRecipeToCompose()
@@ -177,12 +168,10 @@ class ComposeCommand extends Command
 
     protected function installApplication()
     {
-        $this->info('Installing application...');
-
-        $sluggifiedName = Str::slug($this->project->name);
+        $this->info('Installing application with '.$this->project->installer.'...');
 
         $this->call('new', [
-            'name' => $sluggifiedName,
+            'name' => $this->project->getSluggifiedName(),
             '--installer' => $this->project->installer,
         ]);
 
