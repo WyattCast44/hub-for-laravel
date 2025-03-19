@@ -1,5 +1,3 @@
-![Banner](banner.png)
-
 # Installation
 
 ```bash
@@ -11,6 +9,8 @@ composer global require wyattcast44/hub-for-laravel
 # Updating
 
 ```bash
+composer update wyattcast44/hub-for-laravel
+// or
 composer global update wyattcast44/hub-for-laravel
 ```
 
