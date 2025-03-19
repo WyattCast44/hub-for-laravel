@@ -30,7 +30,7 @@ composer global update wyattcast44/hub-for-laravel
   - Recipes written in YAML
   - Sharing recipes
   - Inheriting recipes (docker images inspo)
-- Laravel Hub Web App (local only)
+- [Laravel Hub Web App](https://github.com/WyattCast44/laravel-hub)
   - Docker Hub Inspo
   - Nova Packages Inspo
   - Packages
