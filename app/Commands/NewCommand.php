@@ -25,6 +25,8 @@ class NewCommand extends Command
     protected $installCommand =
         'composer create-project laravel/laravel {NAME} --remove-vcs --prefer-dist';
 
+    protected $laravelInstallerPackage = "laravel/installer";
+
     /**
      * Execute the console command.
      */
@@ -48,7 +50,7 @@ class NewCommand extends Command
 
     protected function determineIfUserHasLaravelInstallerInstalled(): bool
     {
-        $process = Process::run('composer global show laravel/installer');
+        $process = Process::run('composer global show ' . $this->laravelInstallerPackage);
 
         return $process->successful();
     }
