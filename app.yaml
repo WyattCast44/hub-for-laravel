@@ -1,2 +1,48 @@
+# required field, will be used to generate the project directory name
 name: "Laravel Hub"
+
+# The idea is we would set this in the composer.json file and to show in the UI of Laravel Hub
 description: "A Laravel application"
+
+# The idea here is that we can extend a recipe and add our own steps
+extend: "laravel/livewire-volt"
+
+# The idea here is that we can set env variables that will be used in the steps
+env: 
+  APP_RANDOM_KEY: "9876543210"
+
+# should we use steps for this? Inspired by Github Actions
+steps: 
+
+  - name: "test env upserts"
+    env: 
+      APP_NAME: "Laravel Hub 2"
+
+  - name: "test env upserts 2"
+    env: 
+      APP_NAME: "Laravel Hub 3 - should this override the previous env?"
+
+  - name: "Install composer dependencies for Laravel Fortify"
+    composer:
+      require:
+        - "laravel/fortify:^1.0"
+    npm: 
+      install:
+        - "tailwindcss"
+        - "alpinejs"
+
+# Or instead of steps we can just use composer, npm, etc directly
+composer: 
+  require:
+    - "laravel/framework:^10.0"
+
+  require-dev:
+    - "phpunit/phpunit:^10.0"
+
+  scripts:
+    remove:
+      - "lint"
+      - "test"
+    add: 
+      - "lint": "php artisan lint"
+      - "test": "php artisan test"

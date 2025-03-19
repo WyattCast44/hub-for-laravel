@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use LaravelZero\Framework\Commands\Command;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
+use Illuminate\Pipeline\Pipeline;
 
 class ComposeCommand extends Command
 {
@@ -60,14 +61,14 @@ class ComposeCommand extends Command
 
         $this
             ->determineRecipeToCompose()
-            ->ensureScriptFileExists()
+            ->ensureRecipeFileExists()
             ->loadRecipeFile()
             ->parseRecipeFileYaml()
             ->ensureRecipeIsNotEmpty()
             ->ensureProjectHasAName()
             ->ensureDirectoryDNE()
-            ->determineInstallerToUse()
-            ->installApplication();
+            ->installApplication()
+            ->runPipes();
     }
 
     protected function determineRecipeToCompose()
@@ -77,7 +78,7 @@ class ComposeCommand extends Command
         });
     }
 
-    protected function ensureScriptFileExists()
+    protected function ensureRecipeFileExists()
     {
         if (file_exists('./'.$this->recipe)) {
             return $this;
@@ -89,7 +90,7 @@ class ComposeCommand extends Command
     protected function loadRecipeFile()
     {
         try {
-            $this->rawRecipe = file_get_contents($this->recipe);
+            $this->project->rawRecipe = file_get_contents($this->recipe);
 
             return $this;
         } catch (Exception $e) {
@@ -100,7 +101,7 @@ class ComposeCommand extends Command
     protected function parseRecipeFileYaml()
     {
         try {
-            $this->contents = Yaml::parse($this->rawRecipe);
+            $this->project->contents = Yaml::parse($this->project->rawRecipe);
 
             return $this;
         } catch (ParseException $e) {
@@ -110,7 +111,7 @@ class ComposeCommand extends Command
 
     protected function ensureRecipeIsNotEmpty()
     {
-        if (empty($this->contents)) {
+        if (empty($this->project->contents)) {
             throw new Exception('Recipe file ('.$this->recipe.') cannot be empty.');
         }
 
@@ -119,15 +120,15 @@ class ComposeCommand extends Command
 
     protected function ensureProjectHasAName()
     {
-        if (array_key_exists('name', $this->contents) && $this->contents['name'] != null) {
-            $this->project->name = $this->contents['name'];
+        $status = array_key_exists('name', $this->project->contents) && $this->project->contents['name'] != null;
 
-            unset($this->contents['name']);
-
-            return $this;
-        } else {
+        if(!$status) {
             throw new Exception('The recipe must contain a non-null name.');
         }
+
+        $this->project->name = $this->project->contents['name'];
+
+        return $this;
     }
 
     protected function ensureDirectoryDNE()
@@ -147,33 +148,27 @@ class ComposeCommand extends Command
         return $this;
     }
 
-    protected function determineInstallerToUse()
+    protected function installApplication()
     {
-        if (array_key_exists('installer', $this->contents) && $this->contents['installer'] != null) {
-            $installer = $this->contents['installer'];
+        $method = $this->project->getInstallationMethod();
 
-            if ($installer == 'composer' || $installer == 'laravel') {
-                $this->project->installer = $installer;
-            } else {
-                throw new Exception('Invalid installer: '.$installer.'. Valid options are: composer and laravel');
-            }
-        } else {
-            // default to composer if no installer is specified
-            // I could also see defaulting to laravel installed if it's installed
-            $this->project->installer = 'composer';
-        }
+        $this->info('Installing application with '.$method.'...');
 
+        /* $this->call('new', [
+            'name' => $this->project->getSluggifiedName(),
+            '--installer' => $method,
+        ]);
+ */
         return $this;
     }
 
-    protected function installApplication()
+    protected function runPipes()
     {
-        $this->info('Installing application with '.$this->project->installer.'...');
+        $pipeline = app()->make(Pipeline::class);
 
-        $this->call('new', [
-            'name' => $this->project->getSluggifiedName(),
-            '--installer' => $this->project->installer,
-        ]);
+        $project = $pipeline->send($this->project)->through($this->pipes)->thenReturn();
+
+        dd($project);
 
         return $this;
     }
