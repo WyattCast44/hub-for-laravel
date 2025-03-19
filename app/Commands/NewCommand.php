@@ -2,6 +2,7 @@
 
 namespace App\Commands;
 
+use Exception;
 use Illuminate\Support\Facades\Process;
 use LaravelZero\Framework\Commands\Command;
 
@@ -12,7 +13,7 @@ class NewCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'new';
+    protected $signature = 'new {name?} {--installer}';
 
     /**
      * The description of the command.
@@ -21,7 +22,7 @@ class NewCommand extends Command
      */
     protected $description = 'Create a new Laravel application using composer or the laravel installer';
 
-    protected $installCommand = 
+    protected $installCommand =
         'composer create-project laravel/laravel {NAME} --remove-vcs --prefer-dist --no-progress --quiet';
 
     /**
@@ -29,20 +30,24 @@ class NewCommand extends Command
      */
     public function handle(): void
     {
-        $this->info(PHP_EOL . 'Creating a new Laravel application...'. PHP_EOL);
+        $this->info(PHP_EOL.'Creating a new Laravel application...'.PHP_EOL);
 
-        if ($this->determineIfUserHasLaravelInstallerInstalled()) {
-            $this->installLaravelUsingLaravelInstaller();
-        } else {
-            $this->installLaravelUsingComposer();
+        try {
+            $installer = $this->option('installer');
+
+            match ($installer) {
+                'composer' => $this->installLaravelUsingComposer(),
+                'laravel' => $this->installLaravelUsingLaravelInstaller(),
+                default => $this->handleDefaultInstallation(),
+            };
+        } catch (Exception $e) {
+            $this->error('Failed to create Laravel application.');
         }
-
-        $this->info('Laravel application created successfully! Go build something amazing.');
     }
 
     protected function determineIfUserHasLaravelInstallerInstalled(): bool
     {
-        $process = Process::run('composer global show laravel/installer2');
+        $process = Process::run('composer global show laravel/installer');
 
         return $process->successful();
     }
@@ -58,9 +63,9 @@ class NewCommand extends Command
  |______\__,_|_|  \__,_| \_/ \___|_|_|  |_|\__,_|_.__/ 
 ");
 
-        $name = $this->ask('What is the name of your project?');
+        $name = $this->argument('name') ?? $this->ask('What is the name of your project?');
 
-        if (!$name) {
+        if (! $name) {
             $this->error('Please provide a name for your new Laravel application.');
 
             return;
@@ -70,7 +75,7 @@ class NewCommand extends Command
 
         $process = Process::run($command);
 
-        if (!$process->successful()) {
+        if (! $process->successful()) {
             $this->error('Failed to create Laravel application.');
 
             return;
@@ -80,6 +85,11 @@ class NewCommand extends Command
     protected function installLaravelUsingLaravelInstaller(): void
     {
         $command = 'laravel new';
+
+        if ($this->argument('name')) {
+            // if the name is provided, use it
+            $command .= ' '.$this->argument('name');
+        }
 
         $descriptors = [
             0 => STDIN,  // Allow user input
@@ -93,9 +103,21 @@ class NewCommand extends Command
             // Wait for the process to finish
             $returnCode = proc_close($process);
 
-            if (!$returnCode === 0) {
+            if (! $returnCode === 0) {
                 $this->error('Failed to create Laravel application.');
-            } 
+            }
+        }
+
+        // todo: listen for a termsig command and kill the process, currently it
+        // only kills the laravel installer process, not the laravel hub process
+    }
+
+    protected function handleDefaultInstallation(): void
+    {
+        if ($this->determineIfUserHasLaravelInstallerInstalled()) {
+            $this->installLaravelUsingLaravelInstaller();
+        } else {
+            $this->installLaravelUsingComposer();
         }
     }
 }

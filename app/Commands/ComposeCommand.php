@@ -5,10 +5,10 @@ namespace App\Commands;
 use App\Models\Project;
 use Exception;
 use Illuminate\Support\Facades\Process;
-use LaravelZero\Framework\Commands\Command;
-use Symfony\Component\Yaml\Yaml;
-use Symfony\Component\Yaml\Exception\ParseException;
 use Illuminate\Support\Str;
+use LaravelZero\Framework\Commands\Command;
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Yaml;
 
 class ComposeCommand extends Command
 {
@@ -28,29 +28,21 @@ class ComposeCommand extends Command
 
     /**
      * The recipe file to compose the application with.
-     * 
-     * @var string
      */
-    protected string $recipe;   
+    protected string $recipe;
 
     /**
      * The raw recipe file content.
-     * 
-     * @var string
      */
     protected string $rawRecipe;
 
     /**
      * The parsed recipe file contents.
-     * 
-     * @var array
      */
     protected array $contents;
-    
+
     /**
      * The project instance.
-     * 
-     * @var \App\Models\Project
      */
     protected Project $project;
 
@@ -69,7 +61,8 @@ class ComposeCommand extends Command
             ->ensureRecipeIsNotEmpty()
             ->ensureProjectHasAName()
             ->ensureDirectoryDNE()
-            ->determineInstallerToUse();
+            ->determineInstallerToUse()
+            ->installApplication();
     }
 
     protected function printBanner()
@@ -95,11 +88,11 @@ class ComposeCommand extends Command
 
     protected function ensureScriptFileExists()
     {
-        if (file_exists('./' . $this->recipe)) {
+        if (file_exists('./'.$this->recipe)) {
             return $this;
         }
 
-        throw new Exception('Unable to find the given recipe file: ' . $this->recipe);
+        throw new Exception('Unable to find the given recipe file: '.$this->recipe);
     }
 
     protected function loadRecipeFile()
@@ -120,14 +113,14 @@ class ComposeCommand extends Command
 
             return $this;
         } catch (ParseException $e) {
-            throw new Exception('Unable to parse the recipe file: ' . $this->recipe);
+            throw new Exception('Unable to parse the recipe file: '.$this->recipe);
         }
     }
 
     protected function ensureRecipeIsNotEmpty()
     {
         if (empty($this->contents)) {
-            throw new Exception('Recipe file (' . $this->recipe . ') cannot be empty.');
+            throw new Exception('Recipe file ('.$this->recipe.') cannot be empty.');
         }
 
         return $this;
@@ -136,8 +129,8 @@ class ComposeCommand extends Command
     protected function ensureProjectHasAName()
     {
         if (array_key_exists('name', $this->contents) && $this->contents['name'] != null) {
-            $this->project->name = $this->contents['name'];       
-            
+            $this->project->name = $this->contents['name'];
+
             unset($this->contents['name']);
 
             return $this;
@@ -148,19 +141,19 @@ class ComposeCommand extends Command
 
     protected function ensureDirectoryDNE()
     {
-        $path = "./" . Str::slug($this->project->name);
-        
+        $path = './'.Str::slug($this->project->name);
+
         if (is_dir($path)) {
             if ($this->option('force')) {
                 Process::quietly()->run(['rm', '-rf', $path]);
             } else {
                 throw new Exception(
-                    "A directory already exists at the install path. To overwrite the directory use --force, or rename the application."
+                    'A directory already exists at the install path. To overwrite the directory use --force, or rename the application.'
                 );
             }
         }
 
-        return $this;        
+        return $this;
     }
 
     protected function determineInstallerToUse()
@@ -168,19 +161,31 @@ class ComposeCommand extends Command
         if (array_key_exists('installer', $this->contents) && $this->contents['installer'] != null) {
             $installer = $this->contents['installer'];
 
-            if($installer == "composer" || $installer == "laravel") {
+            if ($installer == 'composer' || $installer == 'laravel') {
                 $this->project->installer = $installer;
             } else {
-                throw new Exception('Invalid installer: ' . $installer . '. Valid options are: composer and laravel');
+                throw new Exception('Invalid installer: '.$installer.'. Valid options are: composer and laravel');
             }
         } else {
             // default to composer if no installer is specified
             // I could also see defaulting to laravel installed if it's installed
-            $this->project->installer = "composer";
+            $this->project->installer = 'composer';
         }
 
         return $this;
     }
+
+    protected function installApplication()
+    {
+        $this->info('Installing application...');
+
+        $sluggifiedName = Str::slug($this->project->name);
+
+        $this->call('new', [
+            'name' => $sluggifiedName,
+            '--installer' => $this->project->installer,
+        ]);
+
+        return $this;
+    }
 }
-    
-    
