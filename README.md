@@ -20,6 +20,28 @@ composer global update wyattcast44/hub-for-laravel
 - Docker Compose
 - Docker Hub
 - [Laravel Blueprint](https://blueprint.laravelshift.com/)
+- [GitHub Actions](https://docs.github.com/en/actions)
+
+# Discussion Points w/Matt
+
+- Laravel Hub CLI
+  - Drop-in replacement for Laravel installer
+  - Still use Laravel installer under the hood to capture all the goodness they release
+  - Recipes written in YAML
+  - Sharing recipes
+  - Inheriting recipes (docker images inspo)
+- Laravel Hub Web App (local only)
+  - Docker Hub Inspo
+  - Nova Packages Inspo
+  - Packages
+    - Related packages
+    - Analytics
+    - Official packages
+  - Recipes 
+  - Starter Kits
+  - Basically a one-stop shop for Laravel ecosystem
+  - Ideally would be an official Laravel property: hub.laravel.com
+    - I don't want it to compete against Laravel News (or other sites like it)
 
 # Usage
 
