@@ -3,43 +3,61 @@
 namespace App\Pipes;
 
 use App\Models\Project;
+use Closure;
+use Illuminate\Support\Facades\Artisan;
 
 class UpsertEnvFilePipe
 {
     protected Project $project;
 
-    public function __invoke(Project $project)
+    protected array $env = [];
+
+    public function __invoke(Project $project, Closure $next)
     {
         $this->project = $project;
 
-        $this->internalHandle();
+        if (!$this->shouldHandle()) {
+            return $this;
+        }
 
-        return $this;
+        $this->handleUpserts();
+
+        $next($project);
     }
 
-    public function recursiveMergeEnvs($data) {
-        $result = [];
-    
-        // If 'env' exists at the root, merge it
-        if (isset($data['env']) && is_array($data['env'])) {
-            $result = array_merge($result, $data['env']);
-        }
-    
-        // If 'steps' exist, merge env from each step
-        if (isset($data['steps']) && is_array($data['steps'])) {
-            foreach ($data['steps'] as $step) {
-                if (isset($step['env']) && is_array($step['env'])) {
-                    $result = array_merge($result, $step['env']);
-                }
+    protected function shouldHandle(): bool
+    {
+        $env = $this->project->contents['env'] ?? [];
+
+        // I think we should actually just handle the top level env and 
+        // then default to the steps env if it exists
+        // that way the steps can have their own env and not conflict with the top level
+        // and the progress output will be have content specific to the step
+        // and if there is a step-order-dependant flow, this does not highjack that process
+        $steps = $this->project->contents['steps'] ?? [];
+
+        foreach ($steps as $step) {
+            if (isset($step['env']) && is_array($step['env'])) {
+                $env = array_merge($env, $step['env']);
             }
         }
-    
-        return $result;
+
+        $this->env = $env;
+
+        return count($this->env) > 0;
     }
 
-    public function internalHandle()
+    protected function handleUpserts()
     {
-        $mergedEnvs = $this->recursiveMergeEnvs($this->project->contents);
+        $this->project->command->task("Upserting env file", function () {
+            
+            foreach ($this->env as $key => $value) {
+                Artisan::call('env:set', [
+                    'key' => $key,
+                    'value' => $value,
+                ]);
+            }
+        });
        
         return $this;
     }

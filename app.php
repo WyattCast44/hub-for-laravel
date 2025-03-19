@@ -3,9 +3,9 @@
 require_once 'vendor/autoload.php';
 
 compose('Laravel Hub')
-    ->in('.') // basically allow the user to specify the path to the project
+    ->in('.') 
     ->description('Laravel Hub CLI')
-    ->extend('laravel/livewire-volt') // should we extend starter kits, or recipes, or both?
+    ->extend('laravel/livewire-volt') 
     ->env([
         'APP_NAME' => 'Laravel Hub',
         'APP_MY_KEY' => 'true',

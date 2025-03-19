@@ -157,7 +157,5 @@ class UpsertEnvFile extends Command
         $this->line("[Env] Upserted {$this->keyName} to \"{$this->keyValue}\"");
 
         return $this;
-    }
-    
-    
+    }    
 }

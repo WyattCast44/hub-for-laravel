@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Exception;
 use Illuminate\Support\Str;
+use LaravelZero\Framework\Commands\Command;
 
 class Project
 {
@@ -31,9 +32,16 @@ class Project
      */
     public array $contents;
 
-    public static function make()
+    public Command $command;
+
+    public function __construct($command)
     {
-        return new self;
+        $this->command = $command;
+    }
+
+    public static function make($command)
+    {
+        return new self($command);
     }
 
     public function getInstallationMethod(): string

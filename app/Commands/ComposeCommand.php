@@ -3,6 +3,7 @@
 namespace App\Commands;
 
 use App\Models\Project;
+use App\Pipes\UpsertComposerDescription;
 use App\Pipes\UpsertEnvFilePipe;
 use Exception;
 use Illuminate\Support\Facades\Process;
@@ -49,7 +50,8 @@ class ComposeCommand extends Command
     protected Project $project;
 
     protected array $pipes = [
-        'env' => UpsertEnvFilePipe::class,
+        UpsertEnvFilePipe::class,
+        UpsertComposerDescription::class
     ];
 
     /**
@@ -57,7 +59,7 @@ class ComposeCommand extends Command
      */
     public function handle(): void
     {
-        $this->project = Project::make();
+        $this->project = Project::make($this);
 
         $this
             ->determineRecipeToCompose()
@@ -152,13 +154,19 @@ class ComposeCommand extends Command
     {
         $method = $this->project->getInstallationMethod();
 
-        $this->info('Installing application with '.$method.'...');
+        $this->line("");
 
-        /* $this->call('new', [
-            'name' => $this->project->getSluggifiedName(),
-            '--installer' => $method,
-        ]);
- */
+        $this->task("Installing Laravel with ".$method, function () use ($method) {
+            
+            /* $this->call('new', [
+                'name' => $this->project->getSluggifiedName(),
+                '--installer' => $method,
+            ]); */
+            
+            sleep(0.5);
+           
+        });        
+        
         return $this;
     }
 
@@ -167,8 +175,6 @@ class ComposeCommand extends Command
         $pipeline = app()->make(Pipeline::class);
 
         $project = $pipeline->send($this->project)->through($this->pipes)->thenReturn();
-
-        dd($project);
 
         return $this;
     }
