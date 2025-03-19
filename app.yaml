@@ -30,6 +30,22 @@ steps:
       install:
         - "tailwindcss"
         - "alpinejs"
+    env: 
+      AUTH_DRIVER: "fortify"
+
+    config:
+      auth:
+        defaults:
+          guard: "web"
+          provider: "users"
+          
+    artisan:
+      vendor:publish:
+        provider: "Laravel\Fortify\FortifyServiceProvider"
+      migrate:
+        fresh: true
+        seed: true
+
 
 # Or instead of steps we can just use composer, npm, etc directly
 composer: 

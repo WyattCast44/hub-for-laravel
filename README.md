@@ -41,7 +41,15 @@ composer global update wyattcast44/hub-for-laravel
   - Starter Kits
   - Basically a one-stop shop for Laravel ecosystem
   - Ideally would be an official Laravel property: hub.laravel.com
-    - I don't want it to compete against Laravel News (or other sites like it)
+    - I don't want it to compete against Laravel News, Laravel.io, etc
+- PHP vs Yaml
+  - PHP for starter kits? (see app.php)
+  - Yaml for composing steps? (see app.yaml)
+- PHP API
+  - Offer code gen: 
+    - https://github.com/fusion-php/fusion/blob/main/src/Conformity/Transformers/AnonymousClassTransformer.php
+    - https://github.com/nikic/PHP-Parser
+    - https://github.com/nette/php-generator
 
 # Usage
 
