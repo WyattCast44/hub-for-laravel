@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Exception;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use LaravelZero\Framework\Commands\Command;
 
@@ -56,8 +57,18 @@ class Project
             return $installer;
         } 
 
-        // default to composer if no installer is specified
+        if($this->determineIfUserHasLaravelInstallerInstalled()) {
+            return 'laravel';
+        }
+
         return 'composer';
+    }
+
+    private function determineIfUserHasLaravelInstallerInstalled(): bool
+    {
+        $process = Process::run('composer global show laravel/installer');
+
+        return $process->successful();
     }
 
     public function getSluggifiedName(): string
